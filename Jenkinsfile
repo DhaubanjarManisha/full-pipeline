@@ -178,13 +178,7 @@ pipeline {
             steps {
                 script {
                     echo "--- Running OWASP ZAP Scan ---"
-                    def hostIP = "host.docker.internal" 
-                    // docker run --rm \
-                    // -v \$(pwd):/zap/wrk/:rw \
-                    // -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                    // -t http://\$(ip -4 addr show docker0 | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'):${ZAP_PORT} \
-                    // -r zap_report.html \
-                    
+                    def hostIP = "host.docker.internal"                    
                     try {
                         // 1. Create directory and ensure ANY user (including Docker's zap user) can write to it
                         sh "mkdir -p $WORKSPACE/zap-wrk && chmod 777 $WORKSPACE/zap-wrk"
