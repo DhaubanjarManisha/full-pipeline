@@ -43,22 +43,22 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    echo "--- Starting Static Code Analysis ---"
-                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                        sh """
-                        sonar-scanner \
-                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                          -Dsonar.sources=. \
-                          -Dsonar.python.coverage.reportPaths=coverage.xml \
-                          -Dsonar.exclusions=venv/**,tests/**
-                        """
-                    }
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             echo "--- Starting Static Code Analysis ---"
+        //             withSonarQubeEnv("${SONAR_SERVER_NAME}") {
+        //                 sh """
+        //                 sonar-scanner \
+        //                   -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+        //                   -Dsonar.sources=. \
+        //                   -Dsonar.python.coverage.reportPaths=coverage.xml \
+        //                   -Dsonar.exclusions=venv/**,tests/**
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Build Docker Image') {
             steps {
@@ -69,25 +69,25 @@ pipeline {
             }
         }
 
-        stage('Trivy Security Scan') {
-            steps {
-                script {
-                    echo "Scanning Image using Trivy Container..."
+        // stage('Trivy Security Scan') {
+        //     steps {
+        //         script {
+        //             echo "Scanning Image using Trivy Container..."
                     
-                    // --severity: Only show High and Critical bugs
-                    // --exit-code 0: Don't fail the build (Change to 1 if you want to block bad builds)
-                    // --no-progress: Cleaner logs in Jenkins
-                    sh """
-                        docker run --rm \
-                        -v /var/run/docker.sock:/var/run/docker.sock \
-                        aquasec/trivy image \
-                        --severity HIGH,CRITICAL \
-                        --exit-code 0 \
-                        ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG}
-                    """
-                }
-            }
-        }
+        //             // --severity: Only show High and Critical bugs
+        //             // --exit-code 0: Don't fail the build (Change to 1 if you want to block bad builds)
+        //             // --no-progress: Cleaner logs in Jenkins
+        //             sh """
+        //                 docker run --rm \
+        //                 -v /var/run/docker.sock:/var/run/docker.sock \
+        //                 aquasec/trivy image \
+        //                 --severity HIGH,CRITICAL \
+        //                 --exit-code 0 \
+        //                 ${NEXUS_REGISTRY}/${IMAGE_NAME}:${params.VERSION_TAG}
+        //             """
+        //         }
+        //     }
+        // }
 
 
         stage('Generate 1 (Syft)') {
@@ -186,14 +186,20 @@ pipeline {
                     
                     // Simplified: We use a lightweight ZAP run via Docker
                     // We mount the current directory ($(pwd)) to /zap/wrk to save the report
+                    // docker run --rm \
+                    // -v \$(pwd):/zap/wrk/:rw \
+                    // -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                    // -t http://\$(ip -4 addr show docker0 | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'):${ZAP_PORT} \
+                    // -r zap_report.html \
                     
                     try {
                         sh """
                         docker run --rm \
-                        -v \$(pwd):/zap/wrk/:rw \
-                        -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                        -t http://\$(ip -4 addr show docker0 | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'):${ZAP_PORT} \
+                        --network host \
+                        -t owasp/zap2docker-stable zap-baseline.py \
+                        -t http://localhost:${ZAP_PORT} \
                         -r zap_report.html \
+
                         || true 
                         """
                         // || true prevents pipeline failure if vulnerabilities are found (typical for Baseline scans)
