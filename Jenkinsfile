@@ -152,7 +152,6 @@ pipeline {
 
                     echo "--- Signing Image ---"
                     cosign sign --key ${COSIGN_KEY_FILE} \
-                        --tlog-upload=false \
                         -y \
                         ${NEXUS_REGISTRY}/${IMAGE_NAME}:${VERSION_TAG}
                     '''
