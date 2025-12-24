@@ -195,7 +195,7 @@ pipeline {
                         --network host \
                         zaproxy/zap-stable \
                         zap-baseline.py \
-                        -t http://localhost:9000 \
+                        -t http://localhost:${ZAP_PORT} \
                         -r /zap/wrk/zap_report.html \
                         -g /zap/wrk/zap.yaml \
                         || true 
