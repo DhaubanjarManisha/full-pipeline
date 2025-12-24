@@ -141,7 +141,6 @@ pipeline {
                 ]) {
                     sh '''
                     #!/bin/bash
-                    set -xeuo pipefail
 
                     echo "--- Debug Info ---"
                     whoami
